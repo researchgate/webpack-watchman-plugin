@@ -69,9 +69,7 @@ export default class WatchmanConnector extends EventEmitter {
 
               client.command(['subscribe', watchResponse.watch, 'webpack_subscription', sub],
                 subscribeError => {
-                  if (subscribeError) {
-                    throw subscribeError;
-                  }
+                  if (subscribeError) throw subscribeError;
                 });
             });
           });
