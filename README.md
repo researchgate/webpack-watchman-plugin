@@ -1,5 +1,5 @@
 # WatchmanPlugin for WebPack
-###### A plugin for webpack that integrates with watchman
+###### A webpack plugin that integrates watchman as its watcher.
 
 [![Build Status](https://travis-ci.org/researchgate/webpack-watchman-plugin.svg?branch=master)](https://travis-ci.org/researchgate/webpack-watchman-plugin)
 
