@@ -5,5 +5,5 @@ node_js:
   - "5"
   - stable
 script:
-  - npm check
+  - npm run check
   - npm test
