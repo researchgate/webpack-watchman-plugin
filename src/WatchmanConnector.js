@@ -84,10 +84,12 @@ export default class WatchmanConnector extends EventEmitter {
     this.paused = true;
     if (this.timeoutRef) clearTimeout(this.timeoutRef);
 
-    if (this.client) {
-      this.client.removeListener('subscription', this._onSubscription);
-      this.client.command(['unsubscribe', this.options.projectPath, 'webpack_subscription']);
-      this.client.end();
+    // Create variable for flow
+    const client = this.client;
+    if (client) {
+      client.removeListener('subscription', this._onSubscription);
+      client.command(['unsubscribe', this.options.projectPath, 'webpack_subscription']);
+      client.end();
       this.client = null;
     }
   }
@@ -132,9 +134,12 @@ export default class WatchmanConnector extends EventEmitter {
 
   _getClientInstance(): Client {
     if (!this.client) {
-      this.client = new Client();
-      this.client.on('connect', () => { this.connected = true; });
-      this.client.on('end', () => { this.connected = false; });
+      // Create variable for flow
+      const client = new Client();
+      client.on('connect', () => { this.connected = true; });
+      client.on('end', () => { this.connected = false; });
+
+      this.client = client;
     }
 
     return this.client;

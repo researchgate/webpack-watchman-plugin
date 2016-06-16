@@ -50,7 +50,7 @@
     "eslint": "^2.11.1",
     "eslint-config-airbnb-base": "^3.0.1",
     "eslint-plugin-import": "^1.8.1",
-    "flow-bin": "^0.26.0",
+    "flow-bin": "^0.27.0",
     "husky": "^0.11.4",
     "rimraf": "^2.5.2",
     "testdouble": "^1.4.2"
