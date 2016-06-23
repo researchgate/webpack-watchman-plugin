@@ -1,6 +1,6 @@
 {
   "name": "webpack-watchman-plugin",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A webpack plugin that integrates watchman as its watcher.",
   "main": "lib/index.js",
   "scripts": {
