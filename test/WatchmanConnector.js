@@ -33,7 +33,7 @@ test.cb('change is emitted', t => {
   connector.watch([], []);
 
   connector.on('change', (file, mtime) => {
-    t.is(file, 'test.js');
+    t.is(file, '/project/test.js');
     t.is(mtime, 123456789);
     t.end();
   });
@@ -41,7 +41,7 @@ test.cb('change is emitted', t => {
   watchman.emit('subscription', {
     subscription: 'webpack_subscription',
     files: [
-      { name: 'test.js', mtime_ms: 123456789 },
+      { name: 'test.js', mtime_ms: 123456789, exists: true },
     ],
   });
 });
@@ -52,14 +52,14 @@ test.cb('aggregated is emitted', t => {
   connector.watch([], []);
 
   connector.on('aggregated', (file) => {
-    t.deepEqual(file, ['test.js']);
+    t.deepEqual(file, ['/project/test.js']);
     t.end();
   });
 
   watchman.emit('subscription', {
     subscription: 'webpack_subscription',
     files: [
-      { name: 'test.js', mtime_ms: 123456789 },
+      { name: 'test.js', mtime_ms: 123456789, exists: true },
     ],
   });
 });

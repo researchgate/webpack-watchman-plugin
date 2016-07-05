@@ -119,7 +119,7 @@ export default class WatchmanConnector extends EventEmitter {
           this.initialScanQueue.add({ name: filePath, mtime });
         }
 
-        if (this.paused) return;
+        if (this.paused || !file.exists) return;
 
         this._handleEvents(filePath, mtime);
       });
