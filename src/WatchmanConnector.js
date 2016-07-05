@@ -7,6 +7,11 @@ import async from 'async';
 
 type Options = { aggregateTimeout: number, projectPath: string};
 
+type WatchmanResponse = {
+  subscription: string,
+  files: Array<{ name: string, mtime_ms: number, 'new': boolean, exists: boolean }>
+};
+
 export default class WatchmanConnector extends EventEmitter {
 
   aggregatedChanges: Array<string> = [];
@@ -16,6 +21,8 @@ export default class WatchmanConnector extends EventEmitter {
   options: Options;
   paused: boolean = true;
   timeoutRef: number = 0;
+  initialScan: boolean = true;
+  initialScanQueue: Set = new Set();
 
   constructor(options: Options = { aggregateTimeout: 200, projectPath: '' }): void {
     super();
@@ -29,10 +36,7 @@ export default class WatchmanConnector extends EventEmitter {
 
     if (this.connected) return;
 
-    // TODO files and dirs might change
-
-    this._doInitialScan(files.concat(dirs));
-
+    const allFiles = files.concat(dirs);
     const client = this._getClientInstance();
 
     client.capabilityCheck({ optional: [], required: ['cmd-watch-project', 'relative_root'] },
@@ -56,11 +60,11 @@ export default class WatchmanConnector extends EventEmitter {
                   'allof',
                   [
                     'name',
-                    files.concat(dirs).map(file => path.relative(this.options.projectPath, file)),
+                    allFiles.map(file => path.relative(this.options.projectPath, file)),
                     'wholename',
                   ],
                 ],
-                fields: ['name', 'mtime_ms'],
+                fields: ['name', 'mtime_ms', 'exists'],
                 since: clockResponse.clock,
                 relative_root: watchResponse.relative_path,
               };
@@ -72,8 +76,12 @@ export default class WatchmanConnector extends EventEmitter {
                   if (subscribeError) throw subscribeError;
                 });
             });
-          });
-      });
+          }
+        );
+      }
+    );
+
+    this._doInitialScan(allFiles);
   }
 
   getTimes(): { [key: string]: number } {
@@ -99,27 +107,33 @@ export default class WatchmanConnector extends EventEmitter {
     if (this.timeoutRef) clearTimeout(this.timeoutRef);
   }
 
-  _onSubscription = (resp: Object): void => {
-    resp.files.forEach(file => {
-      if (resp.subscription === 'webpack_subscription') {
-        this._setFileTime(file.name, file.mtime_ms);
-        this._onChange(file.name, file.mtime_ms);
-      }
-    });
+  _onSubscription = (resp: WatchmanResponse): void => {
+    if (resp.subscription === 'webpack_subscription') {
+      resp.files.forEach(file => {
+        const filePath = path.join(this.options.projectPath, file.name);
+        const mtime = (!file.exists) ? null : +file.mtime_ms;
+
+        this._setFileTime(filePath, mtime);
+
+        if (this.initialScan) {
+          this.initialScanQueue.add({ name: filePath, mtime });
+        }
+
+        if (this.paused) return;
+
+        this._handleEvents(filePath, mtime);
+      });
+    }
   };
 
-  _setFileTime(file: string, mtime: number): void {
+  _setFileTime(file: string, mtime: ?number): void {
     this.fileTimes[file] = mtime;
   }
 
-  _onChange(file: string, mtime: number): void {
-    this._setFileTime(file, mtime);
+  _handleEvents(filePath: string, mtime: ?number): void {
+    this.emit('change', filePath, mtime);
 
-    if (this.paused) return;
-
-    this.emit('change', file, mtime);
-
-    this._handleAggregated(file);
+    this._handleAggregated(filePath);
   }
 
   _handleAggregated(file: string): void {
@@ -154,7 +168,7 @@ export default class WatchmanConnector extends EventEmitter {
   };
 
   _doInitialScan(files: Array<string>): void {
-    async.each(files, (file, callback) => {
+    async.eachLimit(files, 100, (file, callback) => {
       fs.stat(file, (err, stat) => {
         if (err) {
           callback(err);
@@ -164,6 +178,15 @@ export default class WatchmanConnector extends EventEmitter {
         this._setFileTime(file, +stat.mtime);
         callback();
       });
+    }, () => {
+      this.initialScan = false;
+
+      if (this.initialScanQueue.size > 0) {
+        const file = Array.from(this.initialScanQueue)[this.initialScanQueue.size - 1];
+        this._handleEvents(file.name, file.mtime);
+      }
+
+      this.initialScanQueue.clear();
     });
   }
 }
