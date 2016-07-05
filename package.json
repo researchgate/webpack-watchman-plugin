@@ -48,7 +48,7 @@
     "babel-preset-stage-1": "^6.5.0",
     "cross-env": "^1.0.8",
     "eslint": "^2.11.1",
-    "eslint-config-airbnb-base": "^3.0.1",
+    "eslint-config-airbnb-base": "^4.0.0",
     "eslint-plugin-import": "^1.8.1",
     "flow-bin": "^0.27.0",
     "husky": "^0.11.4",
