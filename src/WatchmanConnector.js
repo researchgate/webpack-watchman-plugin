@@ -22,7 +22,7 @@ export default class WatchmanConnector extends EventEmitter {
   paused: boolean = true;
   timeoutRef: number = 0;
   initialScan: boolean = true;
-  initialScanQueue: Set = new Set();
+  initialScanQueue: Set<{ name: string, mtime: number }> = new Set();
 
   constructor(options: Options = { aggregateTimeout: 200, projectPath: '' }): void {
     super();
@@ -115,7 +115,7 @@ export default class WatchmanConnector extends EventEmitter {
 
         this._setFileTime(filePath, mtime);
 
-        if (this.initialScan) {
+        if (this.initialScan && mtime) {
           this.initialScanQueue.add({ name: filePath, mtime });
         }
 
