@@ -4,14 +4,14 @@
   "description": "A webpack plugin that integrates watchman as its watcher.",
   "main": "lib/index.js",
   "scripts": {
-    "check": "npm run lint && npm run flow && npm test",
+    "check": "npm run lint && npm run flow",
     "clean": "rimraf lib",
     "build": "cross-env NODE_ENV=production babel src --out-dir lib",
     "flow": "flow",
     "lint": "eslint src",
-    "precommit": "npm run check",
+    "precommit": "npm run check && npm test",
     "prepublish": "npm run clean && npm run build",
-    "preversion": "npm run check",
+    "preversion": "npm run check && npm test",
     "test": "npm run build && ava test/"
   },
   "repository": {
