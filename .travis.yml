@@ -6,4 +6,3 @@ node_js:
   - stable
 script:
   - npm run check
-  - npm test
