@@ -49,7 +49,7 @@
     "cross-env": "^1.0.8",
     "eslint": "^3.0.1",
     "eslint-config-airbnb-base": "^4.0.0",
-    "eslint-plugin-import": "^1.8.1",
+    "eslint-plugin-import": "^1.10.2",
     "flow-bin": "^0.28.0",
     "husky": "^0.11.4",
     "rimraf": "^2.5.2",
