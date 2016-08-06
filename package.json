@@ -39,7 +39,7 @@
   },
   "homepage": "https://github.com/researchgate/webpack-watchman-plugin#readme",
   "devDependencies": {
-    "ava": "^0.15.2",
+    "ava": "^0.16.0",
     "babel-cli": "^6.9.0",
     "babel-eslint": "^6.0.4",
     "babel-plugin-syntax-flow": "^6.8.0",
