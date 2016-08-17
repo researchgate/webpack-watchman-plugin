@@ -7,6 +7,7 @@
     "check": "npm run lint && npm run flow",
     "ci": "npm run lint && npm run flow & npm run test_cov",
     "clean": "rimraf lib",
+    "coverage": "nyc report --reporter=text-lcov > coverage.lcov",
     "build": "cross-env NODE_ENV=production babel src --out-dir lib",
     "flow": "flow",
     "lint": "eslint src",
