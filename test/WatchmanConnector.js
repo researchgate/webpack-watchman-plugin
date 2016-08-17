@@ -1,65 +1,74 @@
 import test from 'ava';
-import td from 'testdouble';
-import { EventEmitter } from 'events';
-import WatchmanConnector from '../lib/WatchmanConnector';
+import path from 'path';
+import WatchmanConnector from '../src/WatchmanConnector';
+import TestHelper from './helpers/TestHelper';
 
-class WatchmanMock extends EventEmitter {
-  command(command, callback) { callback(null, {}); }
-  capabilityCheck(options, callback) { callback(null); }
-}
+const projectPath = path.join(__dirname, 'fixtures');
+const testHelper = new TestHelper(projectPath);
 
-let watchman;
-
-function newConnector(...args) {
-  const instance = new WatchmanConnector(...args);
-  const stub = td.replace(instance, '_getClientInstance');
-  watchman = new WatchmanMock();
-
-  td.when(stub()).thenReturn(watchman);
-  instance.paused = false;
-
-  return instance;
-}
-
-test.afterEach.always(() => td.reset());
+test.cb.before(t => testHelper.before(t.end));
+test.cb.after(t => testHelper.after(t.end));
 
 test('checks for options', t => {
-  t.throws(() => newConnector(), 'projectPath is missing for WatchmanPlugin');
+  t.throws(() => new WatchmanConnector(), 'projectPath is missing for WatchmanPlugin');
 });
 
-test.cb('change is emitted', t => {
+test.beforeEach(t => {
+  // eslint-disable-next-line no-param-reassign
+  t.context.connector = new WatchmanConnector({ projectPath });
+});
+
+test.afterEach(t => {
+  t.context.connector.close();
+});
+
+test.cb.serial('change is emitted', t => {
   t.plan(2);
-  const connector = newConnector({ projectPath: '/project' });
-  connector.watch([], []);
+  const connector = t.context.connector;
+  const filename = testHelper.generateFilename();
+  const filePath = path.join(projectPath, filename);
 
+  connector.watch([filePath], []);
   connector.on('change', (file, mtime) => {
-    t.is(file, '/project/test.js');
-    t.is(mtime, 123456789);
+    t.is(file, filePath);
+    t.true(typeof mtime === 'number');
     t.end();
   });
 
-  watchman.emit('subscription', {
-    subscription: 'webpack_subscription',
-    files: [
-      { name: 'test.js', mtime_ms: 123456789, exists: true },
-    ],
-  });
+  testHelper.tick(() => testHelper.file(filename));
 });
 
-test.cb('aggregated is emitted', t => {
+test.cb.serial('aggregated is emitted', t => {
   t.plan(1);
-  const connector = newConnector({ projectPath: '/project' });
-  connector.watch([], []);
+  const connector = t.context.connector;
+  const filename = testHelper.generateFilename();
+  const filePath = path.join(projectPath, filename);
 
-  connector.on('aggregated', (file) => {
-    t.deepEqual(file, ['/project/test.js']);
+  connector.watch([filePath], []);
+  connector.on('aggregated', (files) => {
+    t.deepEqual(files, [filePath]);
     t.end();
   });
 
-  watchman.emit('subscription', {
-    subscription: 'webpack_subscription',
-    files: [
-      { name: 'test.js', mtime_ms: 123456789, exists: true },
-    ],
+  testHelper.tick(() => testHelper.file(filename));
+});
+
+test.cb.serial('change is not emitted during initialScan', t => {
+  t.plan(1);
+  const connector = t.context.connector;
+  const filename = testHelper.generateFilename();
+  const filePath = path.join(projectPath, filename);
+
+  connector.watch([filePath], []);
+  connector.on('change', () => t.fail('Should not trigger change'));
+
+  testHelper.tick(() => {
+    connector.initialScan = true;
+    testHelper.file(filename);
+
+    testHelper.tick(() => {
+      t.is(connector.initialScanQueue.size, 1);
+      t.end();
+    });
   });
 });

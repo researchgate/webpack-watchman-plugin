@@ -10,4 +10,7 @@ before_install:
   - pushd watchman && ./autogen.sh && ./configure && make && sudo make install && popd
 
 script:
-  - npm run check
+  - npm run ci
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)

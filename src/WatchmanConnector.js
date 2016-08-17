@@ -93,7 +93,6 @@ export default class WatchmanConnector extends EventEmitter {
     this.paused = true;
     if (this.timeoutRef) clearTimeout(this.timeoutRef);
 
-    // Create variable for flow
     const client = this.client;
     if (client) {
       client.removeListener('subscription', this._onSubscription);
@@ -154,7 +153,6 @@ export default class WatchmanConnector extends EventEmitter {
 
   _getClientInstance(): Client {
     if (!this.client) {
-      // Create variable for flow
       const client = new Client();
       client.on('connect', () => { this.connected = true; });
       client.on('end', () => { this.connected = false; });
