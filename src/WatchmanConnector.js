@@ -22,6 +22,7 @@ export default class WatchmanConnector extends EventEmitter {
   paused: boolean = true;
   timeoutRef: number = 0;
   initialScan: boolean = true;
+  initialScanRemoved: boolean = false;
   initialScanQueue: Set<{ name: string, mtime: number }> = new Set();
 
   constructor(options: Options = { aggregateTimeout: 200, projectPath: '' }): void {
@@ -115,8 +116,13 @@ export default class WatchmanConnector extends EventEmitter {
 
         this._setFileTime(filePath, mtime);
 
-        if (this.initialScan && mtime) {
-          this.initialScanQueue.add({ name: filePath, mtime });
+        if (this.initialScan) {
+          if (mtime) {
+            this.initialScanQueue.add({ name: filePath, mtime });
+          } else {
+            this.initialScanRemoved = true;
+          }
+          return;
         }
 
         if (this.paused || !file.exists) return;
@@ -186,6 +192,11 @@ export default class WatchmanConnector extends EventEmitter {
         this._handleEvents(file.name, file.mtime);
       }
 
+      if (this.initialScanRemoved) {
+        this.emit('remove');
+      }
+
+      this.initialScanRemoved = false;
       this.initialScanQueue.clear();
     });
   }
