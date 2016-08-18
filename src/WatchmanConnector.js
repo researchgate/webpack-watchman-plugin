@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import { Client } from 'fb-watchman';
 import async from 'async';
+import fsAccurency from './utils/fsAccurency';
 
 type Options = { aggregateTimeout: number, projectPath: string};
 
@@ -132,7 +133,7 @@ export default class WatchmanConnector extends EventEmitter {
   };
 
   _setFileTime(file: string, mtime: ?number): void {
-    this.fileTimes[file] = mtime;
+    this.fileTimes[file] = mtime + fsAccurency.get();
   }
 
   _handleEvents(filePath: string, mtime: ?number): void {
@@ -172,14 +173,17 @@ export default class WatchmanConnector extends EventEmitter {
   };
 
   _doInitialScan(files: Array<string>): void {
-    async.eachLimit(files, 100, (file, callback) => {
+    async.eachLimit(files, 500, (file, callback) => {
       fs.stat(file, (err, stat) => {
         if (err) {
           callback(err);
           return;
         }
 
-        this._setFileTime(file, +stat.mtime);
+        const mtime = +stat.mtime;
+        fsAccurency.revalidate(mtime);
+
+        this._setFileTime(file, mtime);
         callback();
       });
     }, () => {
@@ -191,10 +195,10 @@ export default class WatchmanConnector extends EventEmitter {
       }
 
       if (this.initialScanRemoved) {
+        this.initialScanRemoved = false;
         this.emit('remove');
       }
 
-      this.initialScanRemoved = false;
       this.initialScanQueue.clear();
     });
   }
