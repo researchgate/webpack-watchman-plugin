@@ -22,11 +22,29 @@ test.afterEach(t => {
   t.context.connector.close();
 });
 
-test.cb.serial('change is emitted', t => {
+test.cb.serial('change is emitted for added file', t => {
   t.plan(2);
   const connector = t.context.connector;
   const filename = testHelper.generateFilename();
   const filePath = path.join(projectPath, filename);
+
+  connector.watch([], []);
+  connector.on('change', (file, mtime) => {
+    t.is(file, filePath);
+    t.true(typeof mtime === 'number');
+    t.end();
+  });
+
+  testHelper.tick(() => testHelper.file(filename));
+});
+
+test.cb.serial('change is emitted for changed file', t => {
+  t.plan(2);
+  const connector = t.context.connector;
+  const filename = testHelper.generateFilename();
+  const filePath = path.join(projectPath, filename);
+
+  testHelper.file(filename);
 
   connector.watch([filePath], []);
   connector.on('change', (file, mtime) => {
@@ -35,7 +53,7 @@ test.cb.serial('change is emitted', t => {
     t.end();
   });
 
-  testHelper.tick(() => testHelper.file(filename));
+  testHelper.tick(() => testHelper.mtime(filename, Date.now()));
 });
 
 test.cb.serial('aggregated is emitted', t => {
