@@ -4,15 +4,18 @@
   "description": "A webpack plugin that integrates watchman as its watcher.",
   "main": "lib/index.js",
   "scripts": {
-    "check": "npm run lint && npm run flow & npm test",
+    "check": "npm run lint && npm run flow",
+    "ci": "npm run lint && npm run flow & npm run test_cov",
     "clean": "rimraf lib",
+    "coverage": "nyc report --reporter=text-lcov > coverage.lcov",
     "build": "cross-env NODE_ENV=production babel src --out-dir lib",
     "flow": "flow",
     "lint": "eslint src",
     "precommit": "npm run check",
     "prepublish": "npm run clean && npm run build",
     "preversion": "npm run check",
-    "test": "npm run build && ava test/"
+    "test_cov": "nyc npm test",
+    "test": "cross-env NODE_ENV=test ava test/"
   },
   "repository": {
     "type": "git",
@@ -42,24 +45,36 @@
     "ava": "^0.16.0",
     "babel-cli": "^6.9.0",
     "babel-eslint": "^6.0.4",
+    "babel-plugin-istanbul": "^2.0.0",
     "babel-plugin-syntax-flow": "^6.8.0",
     "babel-plugin-transform-flow-strip-types": "^6.8.0",
     "babel-preset-es2015": "^6.9.0",
     "babel-preset-stage-1": "^6.5.0",
+    "babel-register": "^6.11.6",
     "cross-env": "^2.0.0",
     "eslint": "^3.0.1",
     "eslint-config-airbnb-base": "^5.0.0",
     "eslint-plugin-import": "^1.10.2",
     "flow-bin": "^0.30.0",
     "husky": "^0.11.4",
-    "rimraf": "^2.5.2",
-    "testdouble": "^1.4.2"
+    "nyc": "^8.1.0",
+    "rimraf": "^2.5.2"
   },
   "dependencies": {
     "async": "^2.0.0",
     "fb-watchman": "^1.9.0"
   },
   "ava": {
-    "babel": "inherit"
+    "babel": "inherit",
+    "require": [
+      "babel-register"
+    ]
+  },
+  "nyc": {
+    "include": [
+      "src/**/*.js"
+    ],
+    "sourceMap": false,
+    "instrument": false
   }
 }
