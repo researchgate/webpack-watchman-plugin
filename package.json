@@ -55,7 +55,7 @@
     "eslint": "^3.0.1",
     "eslint-config-airbnb-base": "^5.0.0",
     "eslint-plugin-import": "^1.10.2",
-    "flow-bin": "^0.30.0",
+    "flow-bin": "^0.31.1",
     "husky": "^0.11.4",
     "nyc": "^8.1.0",
     "rimraf": "^2.5.2"
