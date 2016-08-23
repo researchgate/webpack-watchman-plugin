@@ -5,7 +5,7 @@
   "main": "lib/index.js",
   "scripts": {
     "check": "npm run lint && npm run flow",
-    "ci": "npm run lint && npm run flow & npm run test_cov",
+    "ci": "npm run lint && npm run flow && npm run test_cov",
     "clean": "rimraf lib",
     "coverage": "nyc report --reporter=text-lcov > coverage.lcov",
     "build": "cross-env NODE_ENV=production babel src --out-dir lib",
