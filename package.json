@@ -56,7 +56,7 @@
     "eslint-plugin-import": "^2.0.1",
     "flow-bin": "^0.34.0",
     "husky": "^0.11.4",
-    "nyc": "^8.1.0",
+    "nyc": "^8.4.0-candidate",
     "rimraf": "^2.5.2"
   },
   "dependencies": {
@@ -71,8 +71,9 @@
   },
   "nyc": {
     "all": true,
+    "check-coverage": true,
     "include": [
-      "src/**/*.js"
+      "src"
     ],
     "sourceMap": false,
     "instrument": false
