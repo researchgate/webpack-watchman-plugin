@@ -5,7 +5,7 @@
   "main": "lib/index.js",
   "scripts": {
     "check": "npm run lint && npm run flow",
-    "ci": "npm run lint && npm run flow && npm run test_cov",
+    "ci": "npm run lint && npm run flow && npm run test",
     "clean": "rimraf lib",
     "coverage": "nyc report --reporter=text-lcov > coverage.lcov",
     "build": "cross-env NODE_ENV=production babel src --out-dir lib",
@@ -14,8 +14,7 @@
     "precommit": "npm run check",
     "prepublish": "npm run clean && npm run build",
     "preversion": "npm run check",
-    "test_cov": "nyc npm test",
-    "test": "cross-env NODE_ENV=test ava test/"
+    "test": "cross-env NODE_ENV=test nyc ava"
   },
   "repository": {
     "type": "git",
@@ -71,6 +70,7 @@
     ]
   },
   "nyc": {
+    "all": true,
     "include": [
       "src/**/*.js"
     ],
