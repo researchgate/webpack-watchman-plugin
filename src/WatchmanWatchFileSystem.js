@@ -39,7 +39,7 @@ export default class WatchmanWatchFileSystem {
       this.watcher.once('change', callbackUndelayed);
     }
 
-    this.watcher.once('aggregated', changes => {
+    this.watcher.once('aggregated', (changes) => {
       if (this.inputFileSystem && this.inputFileSystem.purge) {
         this.inputFileSystem.purge(changes);
       }

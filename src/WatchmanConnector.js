@@ -1,5 +1,5 @@
 /* @flow */
-import { EventEmitter } from 'events';
+import EventEmitter from 'events';
 import fs from 'fs';
 import path from 'path';
 import { Client } from 'fb-watchman';
@@ -42,7 +42,7 @@ export default class WatchmanConnector extends EventEmitter {
     const client = this._getClientInstance();
 
     client.capabilityCheck({ optional: [], required: ['cmd-watch-project', 'relative_root'] },
-      capabilityErr => {
+      (capabilityErr) => {
         if (capabilityErr) throw capabilityErr;
 
         // Initiate the watch
@@ -74,7 +74,7 @@ export default class WatchmanConnector extends EventEmitter {
               client.on('subscription', this._onSubscription);
 
               client.command(['subscribe', watchResponse.watch, 'webpack_subscription', sub],
-                subscribeError => {
+                (subscribeError) => {
                   if (subscribeError) throw subscribeError;
                 });
             });
@@ -110,7 +110,7 @@ export default class WatchmanConnector extends EventEmitter {
 
   _onSubscription = (resp: WatchmanResponse): void => {
     if (resp.subscription === 'webpack_subscription') {
-      resp.files.forEach(file => {
+      resp.files.forEach((file) => {
         const filePath = path.join(this.options.projectPath, file.name);
         const mtime = (!file.exists) ? null : +file.mtime_ms;
 
