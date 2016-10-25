@@ -8,7 +8,7 @@ node_js:
 before_install:
   - git clone --depth=1 --branch=v4.7.0 https://github.com/facebook/watchman.git
   - pushd watchman && ./autogen.sh && ./configure && make && sudo make install && popd
-  - rm -rf ./watchman
+  - sudo rm -rf ./watchman
 
 script:
   - npm run ci
