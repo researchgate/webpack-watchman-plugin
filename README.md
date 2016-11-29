@@ -3,7 +3,7 @@
 
 [![Build Status](https://travis-ci.org/researchgate/webpack-watchman-plugin.svg?branch=master)](https://travis-ci.org/researchgate/webpack-watchman-plugin)
 
-> This plugin was tested with webpack 1.13 and watchman 4.5. This plugin makes use of undocumented webpack APIs, so probably the plugin needs
+> This plugin was tested with webpack 1.13+ and watchman 4.5+. This plugin makes use of undocumented webpack APIs, so probably the plugin needs
 > to be adapted for new major versions (like webpack 2).
 
 ## Usage
