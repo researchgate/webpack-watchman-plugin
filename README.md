@@ -2,6 +2,8 @@
 ###### A webpack plugin that integrates watchman as its watcher.
 
 [![Build Status](https://travis-ci.org/researchgate/webpack-watchman-plugin.svg?branch=master)](https://travis-ci.org/researchgate/webpack-watchman-plugin)
+[![codecov](https://codecov.io/gh/researchgate/webpack-watchman-plugin/branch/master/graph/badge.svg)](https://codecov.io/gh/researchgate/webpack-watchman-plugin)
+
 
 > This plugin was tested with webpack ^1.13.0 and watchman ^4.5.0. This plugin makes use of undocumented webpack APIs, so probably the plugin needs
 > to be adapted for new major versions (like webpack 2).
