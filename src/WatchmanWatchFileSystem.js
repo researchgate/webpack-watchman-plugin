@@ -29,7 +29,7 @@ export default class WatchmanWatchFileSystem {
     startTime: number,
     options: Object,
     callback: Callback,
-    callbackUndelayed: (file: string, mtime: number) => void
+    callbackUndelayed: (file: string, mtime: number) => void,
   ): { close: Function, pause: Function } {
     const oldWatcher = this.watcher;
 
@@ -52,7 +52,7 @@ export default class WatchmanWatchFileSystem {
         changes.filter(file => dirs.indexOf(file) >= 0).sort(),
         changes.filter(file => missing.indexOf(file) >= 0).sort(),
         times,
-        times
+        times,
       );
     });
 

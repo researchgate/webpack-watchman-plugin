@@ -78,9 +78,9 @@ export default class WatchmanConnector extends EventEmitter {
                   if (subscribeError) throw subscribeError;
                 });
             });
-          }
+          },
         );
-      }
+      },
     );
 
     this._doInitialScan(allFiles);

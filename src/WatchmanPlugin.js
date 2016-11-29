@@ -17,7 +17,7 @@ export default class WatchmanPlugin {
     compiler.plugin('environment', () => {
       compiler.watchFileSystem = new WatchFileSystem( // eslint-disable-line no-param-reassign
         compiler.inputFileSystem,
-        this.options
+        this.options,
       );
     });
   }
