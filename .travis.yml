@@ -11,9 +11,5 @@ before_install:
   - pushd watchman && ./autogen.sh && ./configure --without-python && make && sudo make install && popd
   - watchman get-sockname
 
-script:
-  - npm run ci
-
 after_success:
   - npm run coverage
-  - bash <(curl -s https://codecov.io/bash)
