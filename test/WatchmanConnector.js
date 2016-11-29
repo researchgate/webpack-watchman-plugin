@@ -9,20 +9,20 @@ const testHelper = new TestHelper(projectPath);
 test.cb.before(t => testHelper.before(t.end));
 test.cb.after(t => testHelper.after(t.end));
 
-test('checks for options', t => {
+test('checks for options', (t) => {
   t.throws(() => new WatchmanConnector(), 'projectPath is missing for WatchmanPlugin');
 });
 
-test.beforeEach(t => {
+test.beforeEach((t) => {
   // eslint-disable-next-line no-param-reassign
   t.context.connector = new WatchmanConnector({ projectPath });
 });
 
-test.afterEach(t => {
+test.afterEach((t) => {
   t.context.connector.close();
 });
 
-test.cb.serial('change is emitted for changed file', t => {
+test.cb.serial('change is emitted for changed file', (t) => {
   t.plan(2);
   const connector = t.context.connector;
   const filename = testHelper.generateFilename();
@@ -40,7 +40,7 @@ test.cb.serial('change is emitted for changed file', t => {
   testHelper.tick(() => testHelper.mtime(filename, Date.now()));
 });
 
-test.cb.serial('aggregated is emitted', t => {
+test.cb.serial('aggregated is emitted', (t) => {
   t.plan(1);
   const connector = t.context.connector;
   const filename = testHelper.generateFilename();
@@ -55,7 +55,7 @@ test.cb.serial('aggregated is emitted', t => {
   testHelper.tick(() => testHelper.file(filename));
 });
 
-test.cb.serial('change is not emitted during initialScan', t => {
+test.cb.serial('change is not emitted during initialScan', (t) => {
   t.plan(1);
   const connector = t.context.connector;
   const filename = testHelper.generateFilename();
