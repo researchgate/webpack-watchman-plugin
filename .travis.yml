@@ -9,7 +9,7 @@ node_js:
 before_install:
   - git clone --depth=1 --branch=v4.7.0 https://github.com/facebook/watchman.git
   - pushd watchman && ./autogen.sh && ./configure --without-python && make && sudo make install && popd
-  - 'if [ "$TRAVIS_VERSION" = "4" ]; then npm -g i npm fi'
+  - 'if [ "$TRAVIS_NODE_VERSION" = "4" ]; then npm -g i npm fi'
 
 after_success:
   - npm run coverage
