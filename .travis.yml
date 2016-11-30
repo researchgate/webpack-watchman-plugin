@@ -9,7 +9,7 @@ node_js:
 before_install:
   - git clone --depth=1 --branch=v4.7.0 https://github.com/facebook/watchman.git
   - pushd watchman && ./autogen.sh && ./configure --without-python && make && sudo make install && popd
-  - watchman get-sockname
+  - watchman watch-del-all && watchman shutdown-server
 
 after_success:
   - npm run coverage
