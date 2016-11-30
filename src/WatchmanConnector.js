@@ -92,8 +92,8 @@ export default class WatchmanConnector extends EventEmitter {
 
   close(): void {
     this.paused = true;
-    this.removeAllListeners();
     if (this.timeoutRef) clearTimeout(this.timeoutRef);
+    this.removeAllListeners();
 
     const client = this.client;
     if (client) {

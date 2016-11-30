@@ -1,6 +1,5 @@
-const fs = require('fs');
+const fs = require('fs-extra');
 const path = require('path');
-const rimraf = require('rimraf');
 
 class TestHelper {
 
@@ -8,18 +7,20 @@ class TestHelper {
     this.testdir = testdir;
   }
 
-  before = done => {
-    this.tick(() => {
-      rimraf.sync(this.testdir);
-      fs.mkdirSync(this.testdir);
-      this.file('.watchmanconfig', '');
-      done();
+  before = (done) => {
+    fs.remove(this.testdir, (removeErr) => {
+      if (removeErr) throw removeErr;
+      fs.mkdirs(this.testdir, (mkdirErr) => {
+        if (mkdirErr) throw mkdirErr;
+        this.file('.watchmanconfig', '');
+        done();
+      });
     });
   };
 
-  after = done => {
-    this.tick(() => {
-      rimraf.sync(this.testdir);
+  after = (done) => {
+    fs.remove(this.testdir, (removeErr) => {
+      if (removeErr) throw removeErr;
       done();
     });
   };
@@ -28,24 +29,39 @@ class TestHelper {
     fs.mkdirSync(path.join(this.testdir, name));
   }
 
-  generateFilename() {
+  static generateFilename() {
     return `${Math.ceil(Math.random() * 10000)}${Date.now()}`;
   }
 
-  file(name, content) {
-    fs.writeFileSync(path.join(this.testdir, name), content || `${Math.random()}`, 'utf-8');
+  file(name, content, done) {
+    if (!done && typeof content === 'function') {
+      // eslint-disable-next-line no-param-reassign
+      done = content;
+      // eslint-disable-next-line no-param-reassign
+      content = null;
+    }
+    fs.writeFile(path.join(this.testdir, name), content || `${Math.random()}`, 'utf-8', (err) => { if (err) throw err; if (done) done(); });
   }
 
   mtime(name, mtime) {
-    const stats = fs.statSync(path.join(this.testdir, name));
-    fs.utimesSync(path.join(this.testdir, name), stats.atime, new Date(mtime));
+    const filePath = path.join(this.testdir, name);
+    fs.stat(filePath, (err, stat) => {
+      if (err) throw err;
+
+      fs.utimes(
+        filePath,
+        stat.atime,
+        new Date(mtime),
+        (utimesErr) => { if (utimesErr) throw utimesErr; },
+      );
+    });
   }
 
   remove(name) {
-    rimraf.sync(path.join(this.testdir, name));
+    fs.remove(path.join(this.testdir, name), (err) => { if (err) throw err; });
   }
 
-  tick(fn, timeout = 500) {
+  static tick(fn, timeout = 500) {
     setTimeout(fn, timeout);
   }
 }
