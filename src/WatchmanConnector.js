@@ -54,15 +54,18 @@ export default class WatchmanConnector extends EventEmitter {
 
     client.capabilityCheck({ optional: [], required: ['cmd-watch-project', 'relative_root'] },
       (capabilityErr) => {
+        /* istanbul ignore next: cannot happen in tests */
         if (capabilityErr) throw capabilityErr;
         debug('watchman capabilityCheck() successful');
 
         // Initiate the watch
         client.command(['watch-project', this.options.projectPath],
           (watchError, watchResponse) => {
+            /* istanbul ignore next: cannot happen in tests */
             if (watchError) throw watchError;
             debug('watchman command watch-project successful');
 
+            /* istanbul ignore if: cannot happen in tests */
             if (watchResponse.warning) {
               console.warn('warning: ', watchResponse.warning); // eslint-disable-line no-console
             }
@@ -87,6 +90,7 @@ export default class WatchmanConnector extends EventEmitter {
 
             client.command(['subscribe', watchResponse.watch, 'webpack_subscription', sub],
               (subscribeError) => {
+                /* istanbul ignore next: cannot happen in testsn */
                 if (subscribeError) throw subscribeError;
                 debug('watchman command subscribe successful');
               });

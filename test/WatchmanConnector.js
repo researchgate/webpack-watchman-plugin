@@ -34,15 +34,17 @@ test.cb('change is emitted for changed file', (t) => {
   const filename = TestHelper.generateFilename();
   const filePath = path.join(cwd, filename);
 
+  connector.on('change', (file, mtime) => {
+    t.is(file, filePath);
+    t.true(typeof mtime === 'number');
+    t.end();
+  });
+
   testHelper.file(filename, () => {
     connector.watch([filePath], [], Date.now() + 1000);
-    connector.on('change', (file, mtime) => {
-      t.is(file, filePath);
-      t.true(typeof mtime === 'number');
-      t.end();
-    });
 
-    TestHelper.tick(() => testHelper.mtime(filename, Date.now()), 1500);
+    // timout because it takes time till we are connected
+    TestHelper.tick(() => testHelper.mtime(filename, Date.now()), 3000);
   });
 });
 
@@ -52,13 +54,14 @@ test.cb('aggregated is emitted', (t) => {
   const filename = TestHelper.generateFilename();
   const filePath = path.join(cwd, filename);
 
-  connector.watch([filePath], [], Date.now() + 1000);
   connector.on('aggregated', (files) => {
     t.deepEqual(files, [filePath]);
     t.end();
   });
+  connector.watch([filePath], [], Date.now());
 
-  TestHelper.tick(() => testHelper.file(filename), 1500);
+  // timout because it takes time till we are connected
+  TestHelper.tick(() => testHelper.file(filename), 3000);
 });
 
 test.cb('change is not emitted during initialScan', (t) => {
@@ -67,18 +70,19 @@ test.cb('change is not emitted during initialScan', (t) => {
   const filename = TestHelper.generateFilename();
   const filePath = path.join(cwd, filename);
 
-  connector.watch([filePath], [], Date.now() + 1000);
   connector.on('change', () => t.fail('Should not trigger change'));
+  connector.watch([filePath], [], Date.now());
 
+  // timout because it takes time till we are connected
   TestHelper.tick(() => {
     connector.initialScan = true;
-    testHelper.file(filename);
-
-    TestHelper.tick(() => {
-      t.is(connector.initialScanQueue.size, 1);
-      t.end();
+    testHelper.file(filename, () => {
+      TestHelper.tick(() => {
+        t.is(connector.initialScanQueue.size, 1);
+        t.end();
+      }, 1000);
     });
-  });
+  }, 3000);
 });
 
 test.cb('change before starting watch is correctly emitted', (t) => {
