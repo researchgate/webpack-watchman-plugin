@@ -40,7 +40,7 @@ class TestHelper {
       // eslint-disable-next-line no-param-reassign
       content = null;
     }
-    fs.writeFile(path.join(this.testdir, name), content || `${Math.random()}`, 'utf-8', (err) => { if (err) throw err; if (done) done(); });
+    fs.writeFile(path.join(this.testdir, name), content || `${Math.random()}`, (err) => { if (err) throw err; if (done) done(); });
   }
 
   mtime(name, mtime) {
