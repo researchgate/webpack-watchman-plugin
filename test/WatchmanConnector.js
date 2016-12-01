@@ -80,3 +80,21 @@ test.cb('change is not emitted during initialScan', (t) => {
     });
   });
 });
+
+test.cb('change during compilation is correctly emitted', (t) => {
+  t.plan(2);
+  const { connector, cwd, testHelper } = t.context;
+  const oldDate = Date.now();
+  const filename = TestHelper.generateFilename();
+  const filePath = path.join(cwd, filename);
+
+  connector.on('change', (file, mtime) => {
+    t.is(file, filePath);
+    t.true(typeof mtime === 'number');
+    t.end();
+  });
+
+  testHelper.file(filename, () => {
+    connector.watch([filePath], [], oldDate);
+  });
+});
