@@ -1,10 +1,11 @@
 /* @flow */
+import async from 'async';
 import createDebug from 'debug';
 import EventEmitter from 'events';
+import { Client } from 'fb-watchman';
+import Int64 from 'node-int64';
 import fs from 'fs';
 import path from 'path';
-import { Client } from 'fb-watchman';
-import async from 'async';
 import fsAccurency from './utils/fsAccurency';
 
 const debug = createDebug('watchman:connector');
@@ -12,6 +13,7 @@ const debug = createDebug('watchman:connector');
 type Options = { aggregateTimeout: number, projectPath: string};
 
 type WatchmanResponse = {
+  clock: string,
   subscription: string,
   files: Array<{ name: string, mtime_ms: number, 'new': boolean, exists: boolean }>
 };
@@ -21,6 +23,7 @@ export default class WatchmanConnector extends EventEmitter {
   aggregatedChanges: Array<string> = [];
   client: ?Client;
   connected: boolean = false;
+  lastClock: string;
   fileTimes: Object = {};
   options: Options;
   paused: boolean = true;
@@ -36,7 +39,11 @@ export default class WatchmanConnector extends EventEmitter {
     this.options = options;
   }
 
-  watch(files: Array<string>, dirs: Array<string>) {
+  /**
+   * `since` has to be either a string with a watchman clock value, or a number
+   * which is then treated as a timestamp in milliseconds
+   */
+  watch(files: Array<string>, dirs: Array<string>, since: string|number) {
     debug(`watch() called, current connection status: ${this.connected ? 'connected' : 'disconnected'}`);
     this.paused = false;
 
@@ -57,36 +64,32 @@ export default class WatchmanConnector extends EventEmitter {
             debug('watchman command watch-project successful');
 
             if (watchResponse.warning) {
-              console.log('warning: ', watchResponse.warning); // eslint-disable-line no-console
+              console.warn('warning: ', watchResponse.warning); // eslint-disable-line no-console
             }
 
-            client.command(['clock', watchResponse.watch], (clockError, clockResponse) => {
-              if (clockError) throw clockError;
-
-              const sub = {
-                expression: [
-                  'allof',
-                  [
-                    'name',
-                    allFiles.map(file => path.relative(this.options.projectPath, file)),
-                    'wholename',
-                  ],
+            const sub = {
+              expression: [
+                'allof',
+                [
+                  'name',
+                  allFiles.map(file => path.relative(this.options.projectPath, file)),
+                  'wholename',
                 ],
-                fields: ['name', 'mtime_ms', 'exists'],
-                since: clockResponse.clock,
-                relative_root: watchResponse.relative_path,
-              };
+              ],
+              fields: ['name', 'mtime_ms', 'exists'],
+              since: typeof since === 'string' ? since : new Int64(Math.floor(since / 1000)),
+              relative_root: watchResponse.relative_path,
+            };
 
-              debug('watchman command subscription data: ', sub);
+            client.on('subscription', this._onSubscription);
 
-              client.on('subscription', this._onSubscription);
+            debug('watchman command subscription data: ', sub);
 
-              client.command(['subscribe', watchResponse.watch, 'webpack_subscription', sub],
-                (subscribeError) => {
-                  if (subscribeError) throw subscribeError;
-                  debug('watchman command subscribe successful');
-                });
-            });
+            client.command(['subscribe', watchResponse.watch, 'webpack_subscription', sub],
+              (subscribeError) => {
+                if (subscribeError) throw subscribeError;
+                debug('watchman command subscribe successful');
+              });
           },
         );
       },
@@ -123,6 +126,7 @@ export default class WatchmanConnector extends EventEmitter {
   _onSubscription = (resp: WatchmanResponse): void => {
     debug('received subscription: %O', resp);
     if (resp.subscription === 'webpack_subscription') {
+      this.lastClock = resp.clock;
       resp.files.forEach((file) => {
         const filePath = path.join(this.options.projectPath, file.name);
         const mtime = (!file.exists) ? null : +file.mtime_ms;
@@ -182,7 +186,7 @@ export default class WatchmanConnector extends EventEmitter {
     const changes = this.aggregatedChanges;
     this.aggregatedChanges = [];
 
-    this.emit('aggregated', changes);
+    this.emit('aggregated', changes, this.lastClock);
   };
 
   _doInitialScan(files: Array<string>): void {
