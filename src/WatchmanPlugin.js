@@ -1,5 +1,8 @@
 /* @flow */
+import createDebug from 'debug';
 import WatchFileSystem from './WatchmanWatchFileSystem';
+
+const debug = createDebug('watchman:plugin');
 
 type Options = { projectPath: string };
 
@@ -15,6 +18,7 @@ export default class WatchmanPlugin {
 
   apply(compiler: Object): void {
     compiler.plugin('environment', () => {
+      debug('creating new filesystem');
       compiler.watchFileSystem = new WatchFileSystem( // eslint-disable-line no-param-reassign
         compiler.inputFileSystem,
         this.options,

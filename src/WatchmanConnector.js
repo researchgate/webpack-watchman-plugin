@@ -1,10 +1,13 @@
 /* @flow */
+import createDebug from 'debug';
 import EventEmitter from 'events';
 import fs from 'fs';
 import path from 'path';
 import { Client } from 'fb-watchman';
 import async from 'async';
 import fsAccurency from './utils/fsAccurency';
+
+const debug = createDebug('watchman:connector');
 
 type Options = { aggregateTimeout: number, projectPath: string};
 
@@ -34,6 +37,7 @@ export default class WatchmanConnector extends EventEmitter {
   }
 
   watch(files: Array<string>, dirs: Array<string>) {
+    debug(`watch() called, current connection status: ${this.connected ? 'connected' : 'disconnected'}`);
     this.paused = false;
 
     if (this.connected) return;
@@ -44,11 +48,13 @@ export default class WatchmanConnector extends EventEmitter {
     client.capabilityCheck({ optional: [], required: ['cmd-watch-project', 'relative_root'] },
       (capabilityErr) => {
         if (capabilityErr) throw capabilityErr;
+        debug('watchman capabilityCheck() successful');
 
         // Initiate the watch
         client.command(['watch-project', this.options.projectPath],
           (watchError, watchResponse) => {
             if (watchError) throw watchError;
+            debug('watchman command watch-project successful');
 
             if (watchResponse.warning) {
               console.log('warning: ', watchResponse.warning); // eslint-disable-line no-console
@@ -71,11 +77,14 @@ export default class WatchmanConnector extends EventEmitter {
                 relative_root: watchResponse.relative_path,
               };
 
+              debug('watchman command subscription data: ', sub);
+
               client.on('subscription', this._onSubscription);
 
               client.command(['subscribe', watchResponse.watch, 'webpack_subscription', sub],
                 (subscribeError) => {
                   if (subscribeError) throw subscribeError;
+                  debug('watchman command subscribe successful');
                 });
             });
           },
@@ -91,6 +100,7 @@ export default class WatchmanConnector extends EventEmitter {
   }
 
   close(): void {
+    debug('close() called');
     this.paused = true;
     if (this.timeoutRef) clearTimeout(this.timeoutRef);
     this.removeAllListeners();
@@ -105,11 +115,13 @@ export default class WatchmanConnector extends EventEmitter {
   }
 
   pause(): void {
+    debug('pause() called');
     this.paused = true;
     if (this.timeoutRef) clearTimeout(this.timeoutRef);
   }
 
   _onSubscription = (resp: WatchmanResponse): void => {
+    debug('received subscription: %O', resp);
     if (resp.subscription === 'webpack_subscription') {
       resp.files.forEach((file) => {
         const filePath = path.join(this.options.projectPath, file.name);
@@ -174,6 +186,7 @@ export default class WatchmanConnector extends EventEmitter {
   };
 
   _doInitialScan(files: Array<string>): void {
+    debug('starting initial file scan');
     async.eachLimit(files, 500, (file, callback) => {
       fs.stat(file, (err, stat) => {
         if (err) {
@@ -189,6 +202,7 @@ export default class WatchmanConnector extends EventEmitter {
       });
     }, () => {
       this.initialScan = false;
+      debug('initial file scan finished');
 
       if (this.initialScanQueue.size > 0) {
         const file = Array.from(this.initialScanQueue)[this.initialScanQueue.size - 1];

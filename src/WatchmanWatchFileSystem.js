@@ -1,5 +1,8 @@
 /* @flow */
+import createDebug from 'debug';
 import Watchman from './WatchmanConnector';
+
+const debug = createDebug('watchman:filesystem');
 
 type Options = { projectPath: string };
 type Callback = (
@@ -33,13 +36,18 @@ export default class WatchmanWatchFileSystem {
   ): { close: Function, pause: Function } {
     const oldWatcher = this.watcher;
 
+    debug('creating new connector');
     this.watcher = new Watchman(Object.assign({}, options, this.options));
 
     if (callbackUndelayed) {
-      this.watcher.once('change', callbackUndelayed);
+      this.watcher.once('change', (filePath, mtime) => {
+        debug('change event received for %s with mtime', filePath, mtime);
+        callbackUndelayed(filePath, mtime);
+      });
     }
 
     this.watcher.once('aggregated', (changes) => {
+      debug('aggregated event received with changes: ', changes);
       if (this.inputFileSystem && this.inputFileSystem.purge) {
         this.inputFileSystem.purge(changes);
       }
@@ -58,7 +66,10 @@ export default class WatchmanWatchFileSystem {
 
     this.watcher.watch(files.concat(missing), dirs, startTime);
 
-    if (oldWatcher) oldWatcher.close();
+    if (oldWatcher) {
+      debug('closing old connector');
+      oldWatcher.close();
+    }
 
     return {
       close: () => this.watcher.close(),
