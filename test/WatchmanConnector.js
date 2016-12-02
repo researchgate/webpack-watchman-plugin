@@ -41,10 +41,12 @@ test.cb('change is emitted for changed file', (t) => {
   });
 
   testHelper.file(filename, () => {
-    connector.watch([filePath], [], Date.now() + 1000);
-
-    // timout because it takes time till we are connected
-    TestHelper.tick(() => testHelper.mtime(filename, Date.now()), 3000);
+    // timeout so the new file is not picked up as change
+    TestHelper.tick(() => {
+      connector.watch([filePath], [], Date.now(), () => {
+        testHelper.mtime(filename, Date.now());
+      });
+    }, 1000);
   });
 });
 
@@ -58,10 +60,9 @@ test.cb('aggregated is emitted', (t) => {
     t.deepEqual(files, [filePath]);
     t.end();
   });
-  connector.watch([filePath], [], Date.now());
-
-  // timout because it takes time till we are connected
-  TestHelper.tick(() => testHelper.file(filename), 3000);
+  connector.watch([filePath], [], Date.now(), () => {
+    testHelper.file(filename);
+  });
 });
 
 test.cb('change is not emitted during initialScan', (t) => {
@@ -71,18 +72,16 @@ test.cb('change is not emitted during initialScan', (t) => {
   const filePath = path.join(cwd, filename);
 
   connector.on('change', () => t.fail('Should not trigger change'));
-  connector.watch([filePath], [], Date.now());
 
-  // timout because it takes time till we are connected
-  TestHelper.tick(() => {
+  connector.watch([filePath], [], Date.now(), () => {
     connector.initialScan = true;
     testHelper.file(filename, () => {
       TestHelper.tick(() => {
         t.is(connector.initialScanQueue.size, 1);
         t.end();
-      }, 1000);
+      }, 2000);
     });
-  }, 3000);
+  });
 });
 
 test.cb('change before starting watch is correctly emitted', (t) => {
