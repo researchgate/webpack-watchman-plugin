@@ -20,6 +20,10 @@ test.cb.afterEach((t) => {
   t.context.testHelper.after(t.end);
 });
 
+test('can be closed without prior start', (t) => {
+  t.notThrows(() => t.context.connector.close());
+});
+
 test('checks for options', (t) => {
   t.throws(() => new WatchmanConnector(), 'projectPath is missing for WatchmanPlugin');
 });
@@ -30,15 +34,19 @@ test.cb('change is emitted for changed file', (t) => {
   const filename = TestHelper.generateFilename();
   const filePath = path.join(cwd, filename);
 
-  testHelper.file(filename, () => {
-    connector.watch([filePath], []);
-    connector.on('change', (file, mtime) => {
-      t.is(file, filePath);
-      t.true(typeof mtime === 'number');
-      t.end();
-    });
+  connector.on('change', (file, mtime) => {
+    t.is(file, filePath);
+    t.true(typeof mtime === 'number');
+    t.end();
+  });
 
-    TestHelper.tick(() => testHelper.mtime(filename, Date.now()));
+  testHelper.file(filename, () => {
+    // timeout so the new file is not picked up as change
+    TestHelper.tick(() => {
+      connector.watch([filePath], [], Date.now(), () => {
+        testHelper.mtime(filename, Date.now());
+      });
+    }, 1000);
   });
 });
 
@@ -48,13 +56,13 @@ test.cb('aggregated is emitted', (t) => {
   const filename = TestHelper.generateFilename();
   const filePath = path.join(cwd, filename);
 
-  connector.watch([filePath], []);
   connector.on('aggregated', (files) => {
     t.deepEqual(files, [filePath]);
     t.end();
   });
-
-  TestHelper.tick(() => testHelper.file(filename));
+  connector.watch([filePath], [], Date.now(), () => {
+    testHelper.file(filename);
+  });
 });
 
 test.cb('change is not emitted during initialScan', (t) => {
@@ -63,16 +71,33 @@ test.cb('change is not emitted during initialScan', (t) => {
   const filename = TestHelper.generateFilename();
   const filePath = path.join(cwd, filename);
 
-  connector.watch([filePath], []);
   connector.on('change', () => t.fail('Should not trigger change'));
 
-  TestHelper.tick(() => {
+  connector.watch([filePath], [], Date.now(), () => {
     connector.initialScan = true;
-    testHelper.file(filename);
-
-    TestHelper.tick(() => {
-      t.is(connector.initialScanQueue.size, 1);
-      t.end();
+    testHelper.file(filename, () => {
+      TestHelper.tick(() => {
+        t.is(connector.initialScanQueue.size, 1);
+        t.end();
+      });
     });
+  });
+});
+
+test.cb('change before starting watch is correctly emitted', (t) => {
+  t.plan(2);
+  const { connector, cwd, testHelper } = t.context;
+  const oldDate = Date.now();
+  const filename = TestHelper.generateFilename();
+  const filePath = path.join(cwd, filename);
+
+  connector.on('change', (file, mtime) => {
+    t.is(file, filePath);
+    t.true(typeof mtime === 'number');
+    t.end();
+  });
+
+  testHelper.file(filename, () => {
+    connector.watch([filePath], [], oldDate);
   });
 });

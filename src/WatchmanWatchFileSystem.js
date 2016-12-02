@@ -19,6 +19,7 @@ export default class WatchmanWatchFileSystem {
   inputFileSystem: Object;
   options: Options;
   watcher: Watchman;
+  lastClock: string;
 
   constructor(inputFileSystem: Object, options: Options): void {
     this.inputFileSystem = inputFileSystem;
@@ -46,7 +47,8 @@ export default class WatchmanWatchFileSystem {
       });
     }
 
-    this.watcher.once('aggregated', (changes) => {
+    this.watcher.once('aggregated', (changes, clock) => {
+      this.lastClock = clock;
       debug('aggregated event received with changes: ', changes);
       if (this.inputFileSystem && this.inputFileSystem.purge) {
         this.inputFileSystem.purge(changes);
@@ -64,7 +66,7 @@ export default class WatchmanWatchFileSystem {
       );
     });
 
-    this.watcher.watch(files.concat(missing), dirs, startTime);
+    this.watcher.watch(files.concat(missing), dirs, this.lastClock || startTime);
 
     if (oldWatcher) {
       debug('closing old connector');
