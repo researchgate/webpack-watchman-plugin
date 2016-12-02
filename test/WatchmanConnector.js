@@ -79,7 +79,7 @@ test.cb('change is not emitted during initialScan', (t) => {
       TestHelper.tick(() => {
         t.is(connector.initialScanQueue.size, 1);
         t.end();
-      }, 2000);
+      });
     });
   });
 });
