@@ -51,7 +51,7 @@
     "codecov": "^1.0.1",
     "cross-env": "^3.0.0",
     "eslint": "^3.0.1",
-    "eslint-config-airbnb-base": "^10.0.1",
+    "eslint-config-airbnb-base": "^11.0.0",
     "eslint-plugin-import": "^2.0.1",
     "flow-bin": "^0.36.0",
     "fs-extra": "^1.0.0",
