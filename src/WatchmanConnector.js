@@ -3,7 +3,6 @@ import async from 'async';
 import createDebug from 'debug';
 import EventEmitter from 'events';
 import { Client } from 'fb-watchman';
-import Int64 from 'node-int64';
 import fs from 'fs';
 import path from 'path';
 import fsAccurency from './utils/fsAccurency';
@@ -125,7 +124,7 @@ export default class WatchmanConnector extends EventEmitter {
                 ],
               ],
               fields: ['name', 'mtime_ms', 'exists'],
-              since: typeof since === 'string' ? since : new Int64(Math.floor(since / 1000)),
+              since: typeof since === 'string' ? since : Math.floor(since / 1000),
               relative_root: watchResponse.relative_path,
             };
 
