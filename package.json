@@ -9,10 +9,10 @@
     "build": "babel src --out-dir lib",
     "flow": "flow",
     "lint": "eslint src",
-    "prepublish": "npm run clean && cross-env NODE_ENV=production npm run build",
-    "preversion": "npm test",
-    "test": "npm run lint && npm run flow && npm run test-only",
-    "test-only": "cross-env NODE_ENV=test nyc ava test/"
+    "prepublish": "yarn run clean && cross-env NODE_ENV=production yarn run build",
+    "preversion": "yarn test",
+    "test": "yarn run lint && yarn run flow && yarn run test-only",
+    "test-only": "cross-env NODE_ENV=test nyc --reporter=json --reporter=text ava test/"
   },
   "repository": {
     "type": "git",
@@ -47,7 +47,6 @@
     "babel-preset-env": "^1.2.1",
     "babel-preset-flow": "^6.23.0",
     "babel-register": "^6.11.6",
-    "codecov": "^2.0.1",
     "cross-env": "^3.0.0",
     "eslint": "^3.0.1",
     "eslint-config-airbnb-base": "^11.0.0",

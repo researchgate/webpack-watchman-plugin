@@ -2,14 +2,24 @@ language: node_js
 sudo: true
 node_js:
   - "4"
-  - "5"
   - "6"
   - "7"
+
+env:
+  - JOB=test
 
 before_install:
   - git clone --depth=1 --branch=v4.7.0 https://github.com/facebook/watchman.git
   - pushd watchman && ./autogen.sh && ./configure --without-python && make && sudo make install && popd
-  - 'if [ "$TRAVIS_NODE_VERSION" == "4" ]; then npm -g i npm ; fi'
+
+script:
+  - 'if [ "$JOB" = "test" ]; then yarn test; fi'
+  - 'if [ "$JOB" = "lint" ]; then yarn run lint && yarn run flow; fi'
+
+matrix:
+  include:
+    - node_js: "lts/*"
+      env: JOB=lint
 
 after_success:
-  - npm run coverage
+  - 'if [ "$JOB" = "test" ]; then bash <(curl -s https://codecov.io/bash) -f coverage/coverage-final.json ; fi'
