@@ -5,7 +5,7 @@ import EventEmitter from 'events';
 import { Client } from 'fb-watchman';
 import fs from 'fs';
 import path from 'path';
-import fsAccurency from './utils/fsAccurency';
+import fsAccurency from './utils/fsAccuracy';
 
 const debug = createDebug('watchman:connector');
 
@@ -20,6 +20,7 @@ type WatchmanResponse = {
 export default class WatchmanConnector extends EventEmitter {
 
   aggregatedChanges: Array<string> = [];
+  aggregatedRemovals: Array<string> = [];
   client: ?Client;
   connected: boolean = false;
   lastClock: string;
@@ -28,8 +29,8 @@ export default class WatchmanConnector extends EventEmitter {
   paused: boolean = true;
   timeoutRef: number = 0;
   initialScan: boolean = true;
-  initialScanRemoved: boolean = false;
-  initialScanQueue: Set<{ name: string, mtime: number }> = new Set();
+  initialScanRemoved: Array<string> = [];
+  initialScanChanged: Array<{ name: string, mtime: number }> = [];
 
   constructor(options: Options = { aggregateTimeout: 200, projectPath: '' }): void {
     super();
@@ -134,7 +135,7 @@ export default class WatchmanConnector extends EventEmitter {
 
             client.command(['subscribe', watchResponse.watch, 'webpack_subscription', sub],
               (subscribeError) => {
-                /* istanbul ignore if: cannot happen in testsn */
+                /* istanbul ignore if: cannot happen in tests */
                 if (subscribeError) {
                   done(subscribeError);
                   return;
@@ -154,41 +155,65 @@ export default class WatchmanConnector extends EventEmitter {
       this.lastClock = resp.clock;
       resp.files.forEach((file) => {
         const filePath = path.join(this.options.projectPath, file.name);
-        const mtime = (!file.exists) ? null : +file.mtime_ms;
 
-        this._setFileTime(filePath, mtime);
+        if (this.paused) return;
 
-        if (this.initialScan) {
-          if (mtime) {
-            this.initialScanQueue.add({ name: filePath, mtime });
-          } else {
-            this.initialScanRemoved = true;
-          }
-          return;
-        }
-
-        if (this.paused || !file.exists) return;
-
-        this._handleEvents(filePath, mtime);
+        if (!file.exists) this._handleRemove(filePath);
+        else this._handleChange(filePath, +file.mtime_ms);
       });
     }
   };
 
-  _setFileTime(file: string, mtime: ?number): void {
+  _setFileTime(file: string, mtime: number): void {
+    fsAccurency.revalidate(mtime);
     this.fileTimes[file] = mtime + fsAccurency.get();
   }
 
-  _handleEvents(filePath: string, mtime: ?number): void {
+  _handleChange(filePath: string, mtime: number): void {
+    if (this.initialScan) {
+      this.initialScanChanged.push({ name: filePath, mtime });
+      return;
+    }
+
+    this._setFileTime(filePath, mtime);
+
+    if (this.paused) return;
+
     this.emit('change', filePath, mtime);
 
-    this._handleAggregated(filePath);
+    this._handleAggregatedChange(filePath);
   }
 
-  _handleAggregated(file: string): void {
+  _handleAggregatedChange(file: string): void {
     if (this.timeoutRef) clearTimeout(this.timeoutRef);
 
     if (this.aggregatedChanges.indexOf(file) < 0) {
       this.aggregatedChanges.push(file);
+    }
+
+    this.timeoutRef = setTimeout(this._onTimeout, this.options.aggregateTimeout);
+  }
+
+  _handleRemove(filePath: string): void {
+    if (this.initialScan) {
+      this.initialScanRemoved.push(filePath);
+      return;
+    }
+
+    delete this.fileTimes[filePath];
+
+    if (this.paused) return;
+
+    this.emit('remove', filePath);
+
+    this._handleAggregatedRemove(filePath);
+  }
+
+  _handleAggregatedRemove(file: string): void {
+    if (this.timeoutRef) clearTimeout(this.timeoutRef);
+
+    if (this.aggregatedRemovals.indexOf(file) < 0) {
+      this.aggregatedRemovals.push(file);
     }
 
     this.timeoutRef = setTimeout(this._onTimeout, this.options.aggregateTimeout);
@@ -209,9 +234,11 @@ export default class WatchmanConnector extends EventEmitter {
   _onTimeout = (): void => {
     this.timeoutRef = 0;
     const changes = this.aggregatedChanges;
+    const removals = this.aggregatedRemovals;
     this.aggregatedChanges = [];
+    this.aggregatedRemovals = [];
 
-    this.emit('aggregated', changes, this.lastClock);
+    this.emit('aggregated', changes, removals, this.lastClock);
   };
 
   _doInitialScan(files: Array<string>, done: () => void): void {
@@ -233,17 +260,16 @@ export default class WatchmanConnector extends EventEmitter {
       this.initialScan = false;
       debug('initial file scan finished');
 
-      if (this.initialScanQueue.size > 0) {
-        const file = Array.from(this.initialScanQueue)[this.initialScanQueue.size - 1];
-        this._handleEvents(file.name, file.mtime);
+      if (this.initialScanChanged.length > 0) {
+        this.initialScanChanged.map(file => this._handleChange(file.name, file.mtime));
       }
 
-      if (this.initialScanRemoved) {
-        this.initialScanRemoved = false;
-        this.emit('remove');
+      if (this.initialScanRemoved.length > 0) {
+        this.initialScanRemoved.map(file => this._handleRemove(file));
       }
 
-      this.initialScanQueue.clear();
+      this.initialScanChanged = [];
+      this.initialScanRemoved = [];
       done();
     });
   }

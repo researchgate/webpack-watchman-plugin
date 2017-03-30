@@ -18,7 +18,7 @@ export default class WatchmanWatchFileSystem {
 
   inputFileSystem: Object;
   options: Options;
-  watcher: Watchman;
+  watcher: ?Watchman;
   lastClock: string;
 
   constructor(inputFileSystem: Object, options: Options): void {
@@ -35,26 +35,35 @@ export default class WatchmanWatchFileSystem {
     callback: Callback,
     callbackUndelayed: (file: string, mtime: number) => void,
   ): { close: Function, pause: Function } {
+    if (!Array.isArray(files)) throw new Error("Invalid arguments: 'files'");
+    if (!Array.isArray(dirs)) throw new Error("Invalid arguments: 'dirs'");
+    if (!Array.isArray(missing)) throw new Error("Invalid arguments: 'missing'");
+    if (typeof callback !== 'function') throw new Error("Invalid arguments: 'callback'");
+    if (typeof startTime !== 'number' && startTime) throw new Error("Invalid arguments: 'startTime'");
+    if (typeof options !== 'object') throw new Error("Invalid arguments: 'options'");
+    if (typeof callbackUndelayed !== 'function' && callbackUndelayed) throw new Error("Invalid arguments: 'callbackUndelayed'");
     const oldWatcher = this.watcher;
 
     debug('creating new connector');
-    this.watcher = new Watchman(Object.assign({}, options, this.options));
+    const watcher = new Watchman(Object.assign({}, options, this.options));
+    this.watcher = watcher;
 
     if (callbackUndelayed) {
-      this.watcher.once('change', (filePath, mtime) => {
+      watcher.once('change', (filePath, mtime) => {
         debug('change event received for %s with mtime', filePath, mtime);
         callbackUndelayed(filePath, mtime);
       });
     }
 
-    this.watcher.once('aggregated', (changes, clock) => {
+    watcher.once('aggregated', (changes, removals, clock) => {
       this.lastClock = clock;
+      const allChanges = changes.concat(removals);
       debug('aggregated event received with changes: ', changes);
       if (this.inputFileSystem && this.inputFileSystem.purge) {
-        this.inputFileSystem.purge(changes);
+        this.inputFileSystem.purge(allChanges);
       }
 
-      const times = this.watcher.getTimes();
+      const times = watcher.getTimes();
 
       callback(
         null,
@@ -66,7 +75,7 @@ export default class WatchmanWatchFileSystem {
       );
     });
 
-    this.watcher.watch(files.concat(missing), dirs, this.lastClock || startTime);
+    watcher.watch(files.concat(missing), dirs, this.lastClock || startTime);
 
     if (oldWatcher) {
       debug('closing old connector');
@@ -74,8 +83,15 @@ export default class WatchmanWatchFileSystem {
     }
 
     return {
-      close: () => this.watcher.close(),
-      pause: () => this.watcher.pause(),
+      close: () => {
+        if (this.watcher) {
+          this.watcher.close();
+          this.watcher = null;
+        }
+      },
+      pause: () => {
+        if (this.watcher) this.watcher.pause();
+      },
     };
   }
 }

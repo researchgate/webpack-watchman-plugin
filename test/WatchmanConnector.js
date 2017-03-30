@@ -77,7 +77,7 @@ test.cb('change is not emitted during initialScan', (t) => {
     connector.initialScan = true;
     testHelper.file(filename, () => {
       TestHelper.tick(() => {
-        t.is(connector.initialScanQueue.size, 1);
+        t.is(connector.initialScanChanged.length, 1);
         t.end();
       });
     });
