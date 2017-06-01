@@ -88,7 +88,7 @@ export default class WatchmanConnector extends EventEmitter {
     if (this.timeoutRef) clearTimeout(this.timeoutRef);
   }
 
-  _startWatch(files: Array<string>, since: string|number, done: () => void): void {
+  _startWatch(files: Array<string>, since: string|number, done: (?Error) => void): void {
     const client = this._getClientInstance();
 
     client.capabilityCheck({ optional: [], required: ['cmd-watch-project', 'relative_root'] },
