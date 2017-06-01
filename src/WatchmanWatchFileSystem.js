@@ -15,7 +15,6 @@ type Callback = (
 ) => void;
 
 export default class WatchmanWatchFileSystem {
-
   inputFileSystem: Object;
   options: Options;
   watcher: ?Watchman;
@@ -37,11 +36,22 @@ export default class WatchmanWatchFileSystem {
   ): { close: Function, pause: Function } {
     if (!Array.isArray(files)) throw new Error("Invalid arguments: 'files'");
     if (!Array.isArray(dirs)) throw new Error("Invalid arguments: 'dirs'");
-    if (!Array.isArray(missing)) throw new Error("Invalid arguments: 'missing'");
-    if (typeof callback !== 'function') throw new Error("Invalid arguments: 'callback'");
-    if (typeof startTime !== 'number' && startTime) throw new Error("Invalid arguments: 'startTime'");
-    if (typeof options !== 'object') throw new Error("Invalid arguments: 'options'");
-    if (typeof callbackUndelayed !== 'function' && callbackUndelayed) throw new Error("Invalid arguments: 'callbackUndelayed'");
+    if (!Array.isArray(missing)) {
+      throw new Error("Invalid arguments: 'missing'");
+    }
+    if (typeof callback !== 'function') {
+      throw new Error("Invalid arguments: 'callback'");
+    }
+    if (typeof startTime !== 'number' && startTime) {
+      throw new Error("Invalid arguments: 'startTime'");
+    }
+    if (typeof options !== 'object') {
+      throw new Error("Invalid arguments: 'options'");
+    }
+    if (typeof callbackUndelayed !== 'function' && callbackUndelayed) {
+      throw new Error("Invalid arguments: 'callbackUndelayed'");
+    }
+
     const oldWatcher = this.watcher;
 
     debug('creating new connector');

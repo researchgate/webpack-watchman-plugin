@@ -7,11 +7,12 @@ const debug = createDebug('watchman:plugin');
 type Options = { projectPath: string };
 
 export default class WatchmanPlugin {
-
   options: Options;
 
   constructor(options: Options = { projectPath: '' }): void {
-    if (!options.projectPath) throw new Error('projectPath is missing for WatchmanPlugin');
+    if (!options.projectPath) {
+      throw new Error('projectPath is missing for WatchmanPlugin');
+    }
 
     this.options = options;
   }

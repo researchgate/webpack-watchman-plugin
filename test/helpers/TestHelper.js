@@ -2,15 +2,14 @@ const fs = require('fs-extra');
 const path = require('path');
 
 class TestHelper {
-
   constructor(testdir) {
     this.testdir = testdir;
   }
 
-  before = (done) => {
-    fs.remove(this.testdir, (removeErr) => {
+  before = done => {
+    fs.remove(this.testdir, removeErr => {
       if (removeErr) throw removeErr;
-      fs.mkdirs(this.testdir, (mkdirErr) => {
+      fs.mkdirs(this.testdir, mkdirErr => {
         if (mkdirErr) throw mkdirErr;
         this.file('.watchmanconfig', '');
         done();
@@ -18,8 +17,8 @@ class TestHelper {
     });
   };
 
-  after = (done) => {
-    fs.remove(this.testdir, (removeErr) => {
+  after = done => {
+    fs.remove(this.testdir, removeErr => {
       if (removeErr) throw removeErr;
       done();
     });
@@ -40,7 +39,14 @@ class TestHelper {
       // eslint-disable-next-line no-param-reassign
       content = null;
     }
-    fs.writeFile(path.join(this.testdir, name), content || `${Math.random()}`, (err) => { if (err) throw err; if (done) done(); });
+    fs.writeFile(
+      path.join(this.testdir, name),
+      content || `${Math.random()}`,
+      err => {
+        if (err) throw err;
+        if (done) done();
+      },
+    );
   }
 
   mtime(name, mtime) {
@@ -48,17 +54,16 @@ class TestHelper {
     fs.stat(filePath, (err, stat) => {
       if (err) throw err;
 
-      fs.utimes(
-        filePath,
-        stat.atime,
-        new Date(mtime),
-        (utimesErr) => { if (utimesErr) throw utimesErr; },
-      );
+      fs.utimes(filePath, stat.atime, new Date(mtime), utimesErr => {
+        if (utimesErr) throw utimesErr;
+      });
     });
   }
 
   remove(name) {
-    fs.remove(path.join(this.testdir, name), (err) => { if (err) throw err; });
+    fs.remove(path.join(this.testdir, name), err => {
+      if (err) throw err;
+    });
   }
 
   static tick(fn, timeout = 500) {

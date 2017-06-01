@@ -9,16 +9,20 @@ import fsAccurency from './utils/fsAccuracy';
 
 const debug = createDebug('watchman:connector');
 
-type Options = { aggregateTimeout: number, projectPath: string};
+type Options = { aggregateTimeout: number, projectPath: string };
 
 type WatchmanResponse = {
   clock: string,
   subscription: string,
-  files: Array<{ name: string, mtime_ms: number, 'new': boolean, exists: boolean }>
+  files: Array<{
+    name: string,
+    mtime_ms: number,
+    'new': boolean,
+    exists: boolean,
+  }>,
 };
 
 export default class WatchmanConnector extends EventEmitter {
-
   aggregatedChanges: Array<string> = [];
   aggregatedRemovals: Array<string> = [];
   client: ?Client;
@@ -32,9 +36,13 @@ export default class WatchmanConnector extends EventEmitter {
   initialScanRemoved: Array<string> = [];
   initialScanChanged: Array<{ name: string, mtime: number }> = [];
 
-  constructor(options: Options = { aggregateTimeout: 200, projectPath: '' }): void {
+  constructor(
+    options: Options = { aggregateTimeout: 200, projectPath: '' },
+  ): void {
     super();
-    if (!options.projectPath) throw new Error('projectPath is missing for WatchmanPlugin');
+    if (!options.projectPath) {
+      throw new Error('projectPath is missing for WatchmanPlugin');
+    }
 
     this.options = options;
   }
@@ -43,8 +51,15 @@ export default class WatchmanConnector extends EventEmitter {
    * `since` has to be either a string with a watchman clock value, or a number
    * which is then treated as a timestamp in milliseconds
    */
-  watch(files: Array<string>, dirs: Array<string>, since: string|number, done?: () => void) {
-    debug(`watch() called, current connection status: ${this.connected ? 'connected' : 'disconnected'}`);
+  watch(
+    files: Array<string>,
+    dirs: Array<string>,
+    since: string | number,
+    done?: () => void,
+  ) {
+    debug(
+      `watch() called, current connection status: ${this.connected ? 'connected' : 'disconnected'}`,
+    );
     this.paused = false;
 
     if (this.connected) return;
@@ -53,13 +68,19 @@ export default class WatchmanConnector extends EventEmitter {
 
     Promise.all([
       new Promise((resolve, reject) => {
-        this._startWatch(allFiles, since, err => (err ? reject(err) : resolve()));
+        this._startWatch(
+          allFiles,
+          since,
+          err => (err ? reject(err) : resolve()),
+        );
       }),
-      new Promise((resolve) => {
+      new Promise(resolve => {
         this._doInitialScan(allFiles, resolve);
       }),
     ])
-      .catch((err) => { throw err; })
+      .catch(err => {
+        throw err;
+      })
       .then(() => (done ? done() : null));
   }
 
@@ -76,7 +97,11 @@ export default class WatchmanConnector extends EventEmitter {
     const client = this.client;
     if (client) {
       client.removeListener('subscription', this._onSubscription);
-      client.command(['unsubscribe', this.options.projectPath, 'webpack_subscription']);
+      client.command([
+        'unsubscribe',
+        this.options.projectPath,
+        'webpack_subscription',
+      ]);
       client.end();
       this.client = null;
     }
@@ -88,11 +113,16 @@ export default class WatchmanConnector extends EventEmitter {
     if (this.timeoutRef) clearTimeout(this.timeoutRef);
   }
 
-  _startWatch(files: Array<string>, since: string|number, done: (?Error) => void): void {
+  _startWatch(
+    files: Array<string>,
+    since: string | number,
+    done: (?Error) => void,
+  ): void {
     const client = this._getClientInstance();
 
-    client.capabilityCheck({ optional: [], required: ['cmd-watch-project', 'relative_root'] },
-      (capabilityErr) => {
+    client.capabilityCheck(
+      { optional: [], required: ['cmd-watch-project', 'relative_root'] },
+      capabilityErr => {
         /* istanbul ignore if: cannot happen in tests */
         if (capabilityErr) {
           done(capabilityErr);
@@ -101,7 +131,8 @@ export default class WatchmanConnector extends EventEmitter {
         debug('watchman capabilityCheck() successful');
 
         // Initiate the watch
-        client.command(['watch-project', this.options.projectPath],
+        client.command(
+          ['watch-project', this.options.projectPath],
           (watchError, watchResponse) => {
             /* istanbul ignore if: cannot happen in tests */
             if (watchError) {
@@ -120,12 +151,16 @@ export default class WatchmanConnector extends EventEmitter {
                 'allof',
                 [
                   'name',
-                  files.map(file => path.relative(this.options.projectPath, file)),
+                  files.map(file =>
+                    path.relative(this.options.projectPath, file),
+                  ),
                   'wholename',
                 ],
               ],
               fields: ['name', 'mtime_ms', 'exists'],
-              since: typeof since === 'string' ? since : Math.floor(since / 1000),
+              since: typeof since === 'string'
+                ? since
+                : Math.floor(since / 1000),
               relative_root: watchResponse.relative_path,
             };
 
@@ -133,8 +168,9 @@ export default class WatchmanConnector extends EventEmitter {
 
             debug('watchman command subscription data: ', sub);
 
-            client.command(['subscribe', watchResponse.watch, 'webpack_subscription', sub],
-              (subscribeError) => {
+            client.command(
+              ['subscribe', watchResponse.watch, 'webpack_subscription', sub],
+              subscribeError => {
                 /* istanbul ignore if: cannot happen in tests */
                 if (subscribeError) {
                   done(subscribeError);
@@ -142,7 +178,8 @@ export default class WatchmanConnector extends EventEmitter {
                 }
                 debug('watchman command subscribe successful');
                 done();
-              });
+              },
+            );
           },
         );
       },
@@ -153,7 +190,7 @@ export default class WatchmanConnector extends EventEmitter {
     debug('received subscription: %O', resp);
     if (resp.subscription === 'webpack_subscription') {
       this.lastClock = resp.clock;
-      resp.files.forEach((file) => {
+      resp.files.forEach(file => {
         const filePath = path.join(this.options.projectPath, file.name);
 
         if (this.paused) return;
@@ -191,7 +228,10 @@ export default class WatchmanConnector extends EventEmitter {
       this.aggregatedChanges.push(file);
     }
 
-    this.timeoutRef = setTimeout(this._onTimeout, this.options.aggregateTimeout);
+    this.timeoutRef = setTimeout(
+      this._onTimeout,
+      this.options.aggregateTimeout,
+    );
   }
 
   _handleRemove(filePath: string): void {
@@ -216,14 +256,21 @@ export default class WatchmanConnector extends EventEmitter {
       this.aggregatedRemovals.push(file);
     }
 
-    this.timeoutRef = setTimeout(this._onTimeout, this.options.aggregateTimeout);
+    this.timeoutRef = setTimeout(
+      this._onTimeout,
+      this.options.aggregateTimeout,
+    );
   }
 
   _getClientInstance(): Client {
     if (!this.client) {
       const client = new Client();
-      client.on('connect', () => { this.connected = true; });
-      client.on('end', () => { this.connected = false; });
+      client.on('connect', () => {
+        this.connected = true;
+      });
+      client.on('end', () => {
+        this.connected = false;
+      });
 
       this.client = client;
     }
@@ -243,34 +290,41 @@ export default class WatchmanConnector extends EventEmitter {
 
   _doInitialScan(files: Array<string>, done: () => void): void {
     debug('starting initial file scan');
-    async.eachLimit(files, 500, (file, callback) => {
-      fs.stat(file, (err, stat) => {
-        if (err) {
-          callback(err);
-          return;
+    async.eachLimit(
+      files,
+      500,
+      (file, callback) => {
+        fs.stat(file, (err, stat) => {
+          if (err) {
+            callback(err);
+            return;
+          }
+
+          const mtime = +stat.mtime;
+          fsAccurency.revalidate(mtime);
+
+          this._setFileTime(file, mtime);
+          callback();
+        });
+      },
+      () => {
+        this.initialScan = false;
+        debug('initial file scan finished');
+
+        if (this.initialScanChanged.length > 0) {
+          this.initialScanChanged.map(file =>
+            this._handleChange(file.name, file.mtime),
+          );
         }
 
-        const mtime = +stat.mtime;
-        fsAccurency.revalidate(mtime);
+        if (this.initialScanRemoved.length > 0) {
+          this.initialScanRemoved.map(file => this._handleRemove(file));
+        }
 
-        this._setFileTime(file, mtime);
-        callback();
-      });
-    }, () => {
-      this.initialScan = false;
-      debug('initial file scan finished');
-
-      if (this.initialScanChanged.length > 0) {
-        this.initialScanChanged.map(file => this._handleChange(file.name, file.mtime));
-      }
-
-      if (this.initialScanRemoved.length > 0) {
-        this.initialScanRemoved.map(file => this._handleRemove(file));
-      }
-
-      this.initialScanChanged = [];
-      this.initialScanRemoved = [];
-      done();
-    });
+        this.initialScanChanged = [];
+        this.initialScanRemoved = [];
+        done();
+      },
+    );
   }
 }

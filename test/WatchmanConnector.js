@@ -5,7 +5,7 @@ import TestHelper from './helpers/TestHelper';
 
 const projectPath = path.join(__dirname, 'fixtures');
 
-test.cb.beforeEach((t) => {
+test.cb.beforeEach(t => {
   // eslint-disable-next-line no-param-reassign
   t.context.cwd = path.join(projectPath, t.title.replace(/ /g, '_'));
   // eslint-disable-next-line no-param-reassign
@@ -15,20 +15,23 @@ test.cb.beforeEach((t) => {
   t.context.testHelper.before(t.end);
 });
 
-test.cb.afterEach((t) => {
+test.cb.afterEach(t => {
   t.context.connector.close();
   t.context.testHelper.after(t.end);
 });
 
-test('can be closed without prior start', (t) => {
+test('can be closed without prior start', t => {
   t.notThrows(() => t.context.connector.close());
 });
 
-test('checks for options', (t) => {
-  t.throws(() => new WatchmanConnector(), 'projectPath is missing for WatchmanPlugin');
+test('checks for options', t => {
+  t.throws(
+    () => new WatchmanConnector(),
+    'projectPath is missing for WatchmanPlugin',
+  );
 });
 
-test.cb('change is emitted for changed file', (t) => {
+test.cb('change is emitted for changed file', t => {
   t.plan(2);
   const { connector, cwd, testHelper } = t.context;
   const filename = TestHelper.generateFilename();
@@ -50,13 +53,13 @@ test.cb('change is emitted for changed file', (t) => {
   });
 });
 
-test.cb('aggregated is emitted', (t) => {
+test.cb('aggregated is emitted', t => {
   t.plan(1);
   const { connector, cwd, testHelper } = t.context;
   const filename = TestHelper.generateFilename();
   const filePath = path.join(cwd, filename);
 
-  connector.on('aggregated', (files) => {
+  connector.on('aggregated', files => {
     t.deepEqual(files, [filePath]);
     t.end();
   });
@@ -65,7 +68,7 @@ test.cb('aggregated is emitted', (t) => {
   });
 });
 
-test.cb('change is not emitted during initialScan', (t) => {
+test.cb('change is not emitted during initialScan', t => {
   t.plan(1);
   const { connector, cwd, testHelper } = t.context;
   const filename = TestHelper.generateFilename();
@@ -84,7 +87,7 @@ test.cb('change is not emitted during initialScan', (t) => {
   });
 });
 
-test.cb('change before starting watch is correctly emitted', (t) => {
+test.cb('change before starting watch is correctly emitted', t => {
   t.plan(2);
   const { connector, cwd, testHelper } = t.context;
   const oldDate = Date.now();
