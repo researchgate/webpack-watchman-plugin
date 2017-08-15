@@ -262,9 +262,9 @@ ava-init@^0.2.0:
     read-pkg-up "^2.0.0"
     write-pkg "^2.0.0"
 
-ava@^0.21.0:
-  version "0.21.0"
-  resolved "https://registry.yarnpkg.com/ava/-/ava-0.21.0.tgz#cd8d8ea3546f57150dea38548b9f72f8ca583d29"
+ava@0.22.0:
+  version "0.22.0"
+  resolved "https://registry.yarnpkg.com/ava/-/ava-0.22.0.tgz#4c28a1fdef7e749ba0c8131ac18a7ca489eef049"
   dependencies:
     "@ava/babel-preset-stage-4" "^1.1.0"
     "@ava/babel-preset-transform-test-files" "^3.0.0"
@@ -1387,15 +1387,15 @@ debug-log@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/debug-log/-/debug-log-1.0.1.tgz#2307632d4c04382b8df8a32f70b895046d52745f"
 
-debug@3.0.0:
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/debug/-/debug-3.0.0.tgz#1d2feae53349047b08b264ec41906ba17a8516e4"
-  dependencies:
-    ms "2.0.0"
-
 debug@^2.1.1, debug@^2.2.0, debug@^2.6.3, debug@^2.6.8:
   version "2.6.8"
   resolved "https://registry.yarnpkg.com/debug/-/debug-2.6.8.tgz#e731531ca2ede27d188222427da17821d68ff4fc"
+  dependencies:
+    ms "2.0.0"
+
+debug@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/debug/-/debug-3.0.0.tgz#1d2feae53349047b08b264ec41906ba17a8516e4"
   dependencies:
     ms "2.0.0"
 
