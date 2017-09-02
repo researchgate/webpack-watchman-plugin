@@ -21,7 +21,7 @@ before_install:
 before_script: greenkeeper-lockfile-update
 
 script:
-  - 'if [ "$JOB" = "test" ]; then yarn test; fi'
+  - 'if [ "$JOB" = "test" ]; then yarn test-only; fi'
   - 'if [ "$JOB" = "lint" ]; then yarn run lint && yarn run flow; fi'
 
 after_script: greenkeeper-lockfile-upload
