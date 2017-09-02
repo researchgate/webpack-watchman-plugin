@@ -5,16 +5,15 @@
   "main": "lib/index.js",
   "scripts": {
     "clean": "rimraf lib",
-    "coverage": "nyc report --reporter=json && codecov -f coverage/coverage-final.json",
-    "build": "babel src --out-dir lib",
+    "build": "babel src --out-dir lib --ignore __tests__",
     "flow": "flow",
-    "format": "eslint --fix src",
-    "lint": "eslint src",
-    "precommit": "lint-staged",
+    "format": "eslint --fix src test",
+    "lint": "eslint src test",
+    "precommit": "yarn run flow && lint-staged",
     "prepublish": "yarn run clean && cross-env NODE_ENV=production yarn run build",
     "preversion": "yarn test",
-    "test": "yarn run lint && yarn run flow && yarn run test-only",
-    "test-only": "cross-env NODE_ENV=test nyc --reporter=json --reporter=text ava test/"
+    "test": "jest",
+    "test:coverage": "yarn test -- --coverage"
   },
   "repository": {
     "type": "git",
@@ -42,21 +41,18 @@
   "homepage": "https://github.com/researchgate/webpack-watchman-plugin#readme",
   "devDependencies": {
     "@researchgate/eslint-config-rg-node-babel": "^0.3.0",
-    "ava": "^0.22.0",
     "babel-cli": "^6.9.0",
     "babel-eslint": "^7.0.0",
-    "babel-plugin-istanbul": "^4.0.0",
     "babel-plugin-transform-class-properties": "^6.23.0",
     "babel-preset-env": "^1.2.1",
     "babel-preset-flow": "^6.23.0",
-    "babel-register": "^6.11.6",
     "cross-env": "^5.0.0",
     "eslint": "^4.1.0",
     "flow-bin": "^0.54.0",
     "fs-extra": "^4.0.0",
     "husky": "^0.14.3",
+    "jest": "^20.0.4",
     "lint-staged": "^4.0.2",
-    "nyc": "^11.0.3",
     "rimraf": "^2.5.2"
   },
   "dependencies": {
@@ -78,18 +74,14 @@
       "git add"
     ]
   },
-  "ava": {
-    "babel": "inherit"
-  },
-  "nyc": {
-    "all": true,
-    "include": [
-      "src"
+  "jest": {
+    "collectCoverageFrom": [
+      "src/**/*.js"
     ],
-    "require": [
-      "babel-register"
+    "coverageReporters": [
+      "text",
+      "json"
     ],
-    "sourceMap": false,
-    "instrument": false
+    "roots": ["<rootDir>/src/"]
   }
 }
