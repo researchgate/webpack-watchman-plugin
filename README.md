@@ -5,8 +5,7 @@
 [![codecov](https://codecov.io/gh/researchgate/webpack-watchman-plugin/branch/master/graph/badge.svg)](https://codecov.io/gh/researchgate/webpack-watchman-plugin)
 
 
-> This plugin was tested with webpack ^1.13.0 and watchman ^4.5.0. This plugin makes use of undocumented webpack APIs, so probably the plugin needs
-> to be adapted for new major versions (like webpack 2).
+> This plugin was tested with webpack 1, 2 and 3 and watchman 4.5+.
 
 ## Usage
 
