@@ -16,7 +16,7 @@ matrix:
 
 before_install:
   - yarn global add greenkeeper-lockfile@1
-  - git clone --depth=1 --branch=v4.7.0 https://github.com/facebook/watchman.git
+  - git clone --depth=1 --branch=v4.9.0 https://github.com/facebook/watchman.git
   - pushd watchman && ./autogen.sh && ./configure --without-python && make && sudo make install && popd
 
 before_script: greenkeeper-lockfile-update
