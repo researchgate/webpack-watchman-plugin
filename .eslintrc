@@ -1,8 +1,4 @@
 {
-  "extends": "airbnb-base",
-  "parser": "babel-eslint",
-  "rules": {
-    "no-underscore-dangle": 0,
-    "arrow-parens": ["error", "as-needed"]
-  }
+  "extends": "@researchgate/eslint-config-rg-node-babel",
+  "parser": "babel-eslint"
 }
