@@ -55,21 +55,21 @@
     lodash "^4.2.0"
     to-fast-properties "^2.0.0"
 
-"@researchgate/eslint-config-rg-base@^1.0.1":
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/@researchgate/eslint-config-rg-base/-/eslint-config-rg-base-1.0.1.tgz#83af2278e4ad7fff7414ead4e2feaf3d1d9c2f24"
+"@researchgate/eslint-config-rg-base@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@researchgate/eslint-config-rg-base/-/eslint-config-rg-base-2.0.0.tgz#8736eb1974691e517909eb0224cd2a1ee634e21a"
 
-"@researchgate/eslint-config-rg-node-babel@^1.0.0":
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/@researchgate/eslint-config-rg-node-babel/-/eslint-config-rg-node-babel-1.0.1.tgz#c4b8bbdfa0a7fff06d0f54f079d67fa0acb55604"
+"@researchgate/eslint-config-rg-node-babel@2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@researchgate/eslint-config-rg-node-babel/-/eslint-config-rg-node-babel-2.0.0.tgz#83dc793057a2335ef51d67198d193e93598b06e0"
   dependencies:
-    "@researchgate/eslint-config-rg-node" "^1.0.1"
+    "@researchgate/eslint-config-rg-node" "^2.0.0"
 
-"@researchgate/eslint-config-rg-node@^1.0.1":
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/@researchgate/eslint-config-rg-node/-/eslint-config-rg-node-1.0.1.tgz#82a071a3a52554e4ab83acd4248fd94d363a7e0d"
+"@researchgate/eslint-config-rg-node@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@researchgate/eslint-config-rg-node/-/eslint-config-rg-node-2.0.0.tgz#a6bbf4f250b187ec76e39a45ce93a32805045916"
   dependencies:
-    "@researchgate/eslint-config-rg-base" "^1.0.1"
+    "@researchgate/eslint-config-rg-base" "^2.0.0"
 
 abab@^1.0.3:
   version "1.0.4"
@@ -1608,7 +1608,7 @@ form-data@~2.3.1:
     combined-stream "^1.0.5"
     mime-types "^2.1.12"
 
-fs-extra@5.0.0:
+fs-extra@^5.0.0:
   version "5.0.0"
   resolved "https://registry.yarnpkg.com/fs-extra/-/fs-extra-5.0.0.tgz#414d0110cdd06705734d055652c5411260c31abd"
   dependencies:
@@ -2522,7 +2522,7 @@ levn@^0.3.0, levn@~0.3.0:
     prelude-ls "~1.1.2"
     type-check "~0.3.2"
 
-lint-staged@6.0.0:
+lint-staged@^6.0.0:
   version "6.0.0"
   resolved "https://registry.yarnpkg.com/lint-staged/-/lint-staged-6.0.0.tgz#7ab7d345f2fe302ff196f1de6a005594ace03210"
   dependencies:
