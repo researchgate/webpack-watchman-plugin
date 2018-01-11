@@ -1,4 +1,5 @@
 /* @flow */
+/* global TimeoutID */
 import async from 'async';
 import createDebug from 'debug';
 import EventEmitter from 'events';
@@ -31,7 +32,7 @@ export default class WatchmanConnector extends EventEmitter {
     fileTimes: Object = {};
     options: Options;
     paused: boolean = true;
-    timeoutRef: number = 0;
+    timeoutRef: ?TimeoutID;
     initialScan: boolean = true;
     initialScanRemoved: Array<string> = [];
     initialScanChanged: Array<{ name: string, mtime: number }> = [];
@@ -46,9 +47,9 @@ export default class WatchmanConnector extends EventEmitter {
     }
 
     /**
-   * `since` has to be either a string with a watchman clock value, or a number
-   * which is then treated as a timestamp in milliseconds
-   */
+     * `since` has to be either a string with a watchman clock value, or a number
+     * which is then treated as a timestamp in milliseconds
+     */
     watch(files: Array<string>, dirs: Array<string>, since: string | number, done?: () => void) {
         debug(`watch() called, current connection status: ${this.connected ? 'connected' : 'disconnected'}`);
         this.paused = false;
@@ -236,7 +237,7 @@ export default class WatchmanConnector extends EventEmitter {
     }
 
     handleTimeout = (): void => {
-        this.timeoutRef = 0;
+        this.timeoutRef = null;
         const changes = this.aggregatedChanges;
         const removals = this.aggregatedRemovals;
         this.aggregatedChanges = [];
