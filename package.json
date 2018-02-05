@@ -40,7 +40,7 @@
   },
   "homepage": "https://github.com/researchgate/webpack-watchman-plugin#readme",
   "devDependencies": {
-    "@researchgate/eslint-config-rg-node-babel": "^2.0.0",
+    "@researchgate/eslint-config-rg-node-babel": "^3.0.0",
     "babel-cli": "^6.9.0",
     "babel-eslint": "^8.2.1",
     "babel-plugin-transform-class-properties": "^6.23.0",
